@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EF Information Card Generator</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#202d49;background:#f3f6ff}
+*{box-sizing:border-box}body{margin:0;padding:16px;max-width:760px;margin-inline:auto}
+h1{font-size:1.45rem;margin:0 0 5px}.sub{color:#65718a;font-size:.92rem;margin:0 0 18px}
+.panel{background:white;border:1px solid #dce3f2;border-radius:16px;padding:16px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-weight:700;font-size:.86rem;margin-bottom:5px}
+input,select{width:100%;min-width:0;padding:11px;border:1px solid #cbd5e1;border-radius:9px;font-size:16px;background:white;color:#202d49}
+button{border:0;border-radius:10px;padding:13px 12px;font-size:15px;font-weight:700;cursor:pointer}
+.primary{background:#2457d6;color:white}.secondary{background:white;color:#244bc5;border:1px solid #b8c8f4}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.preview{background:#e5edff;padding:9px;border-radius:12px}
+canvas{width:100%;height:auto;display:block;border-radius:8px}
+.note{font-size:.82rem;color:#65718a;line-height:1.45}.msg{font-size:.9rem;margin-top:10px;min-height:1.2em}
+@media(max-width:420px){body{padding:10px}.panel{padding:12px}.grid{gap:10px}}
+</style>
+</head>
+<body>
+<h1>EF Information Card Generator</h1>
+<p class="sub">Ilagay ang datos, gumawa ng preview, at i-save bilang PNG.</p>
+<section class="panel">
+<h2 style="font-size:1.1rem;margin-top:0">EF Card Details</h2>
+<div class="grid">
+<div><label for="date">Petsa</label><input id="date" type="date"></div>
+<div><label for="time">Oras</label><input id="time" type="time" value="07:45"></div>
+<div><label for="week">Week number</label><input id="week" readonly></div>
+<div><label for="status">Status</label><select id="status"><option>Approved na po ang EF</option><option>Pending ang EF</option><option>Hindi pa approved ang EF</option></select></div>
+<div><label for="approved">Petsa ng EF</label><input id="approved" type="date"></div>
+<div><label for="local">Lokal</label><input id="local" value="Antipolo"></div>
+<div><label for="evangelist">Ebanghelista</label><input id="evangelist" value="Albrix Auriada"></div>
+<div><label for="name">Pangalan ng itinala</label><input id="name" value="Mariel Galang"></div>
+<div><label for="civil">Kalagayan Sibil</label><select id="civil"><option>Single</option><option>Married</option><option>Widowed</option><option>Annulled</option><option>Other</option></select></div>
+<div><label for="type">Uri</label><select id="type"><option>Hindi Handog</option><option>Handog</option><option>Iba pa</option></select></div>
+</div>
+<p class="note">Awtomatikong sinusundan ng Petsa at Week ang petsang pinili mo. Maaari mong baguhin ang lahat ng ibang field.</p>
+</section>
+<section class="panel">
+<h2 style="font-size:1.1rem;margin-top:0">Image Preview</h2>
+<div class="preview"><canvas id="card" width="1080" height="1080"></canvas></div>
+<div class="actions" style="margin-top:12px">
+<button id="generate" class="primary">Generate Image</button>
+<button id="save" class="secondary">Save Image ↓</button>
+</div>
+<div id="message" class="msg" role="status">Handa na. I-edit ang datos at pindutin ang Generate Image.</div>
+</section>
+<script>
+const $=id=>document.getElementById(id), c=$('card'), x=c.getContext('2d');
+const ids=['date','time','status','approved','local','evangelist','name','civil','type'];
+function localISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function weekNum(s){if(!s)return '';const d=new Date(s+'T12:00:00');const jan=new Date(d.getFullYear(),0,1);return String(Math.ceil((((d-jan)/86400000)+jan.getDay()+1)/7))}
+function fmt(s){if(!s)return 'Hindi tinukoy';return new Intl.DateTimeFormat('en-US',{month:'long',day:'2-digit',year:'numeric'}).format(new Date(s+'T12:00:00'))}
+function day(s){return s?new Intl.DateTimeFormat('en-US',{weekday:'long'}).format(new Date(s+'T12:00:00')):''}
+function textFit(t,xx,yy,max,font,color){x.font=font;x.fillStyle=color;while(x.measureText(t).width>max&&parseInt(font.match(/\d+/)?.[0]||'16')>17){font=font.replace(/\d+/,String(parseInt(font.match(/\d+/)[0])-1));x.font=font}x.fillText(t,xx,yy)}
+function draw(){
+ const date=$('date').value;$('week').value=weekNum(date);
+ x.clearRect(0,0,1080,1080);
+ let g=x.createLinearGradient(0,0,1080,1080);g.addColorStop(0,'#f3f6ff');g.addColorStop(1,'#e5edff');x.fillStyle=g;x.fillRect(0,0,1080,1080);
+ x.fillStyle='#244bc5';x.fillRect(0,0,1080,245);x.fillStyle='#466fe0';x.beginPath();x.arc(1010,10,220,0,Math.PI*2);x.fill();x.fillStyle='#7392f1';x.beginPath();x.arc(1040,0,135,0,Math.PI*2);x.fill();
+ x.fillStyle='#fff';x.font='bold 45px Arial';x.fillText('EF INFORMATION',65,82);x.font='bold 76px Arial';x.fillText('EF CARD',65,165);x.font='24px Arial';x.fillStyle='#e4eaff';x.fillText('INFORMATION RECORD',68,207);
+ x.fillStyle='#fff';x.beginPath();x.roundRect(50,265,980,755,28);x.fill();x.fillStyle='#dbe6ff';x.beginPath();x.roundRect(78,290,924,105,18);x.fill();
+ x.fillStyle='#244bc5';x.font='bold 29px Arial';x.fillText(fmt(date)+', '+day(date),105,335);x.font='24px Arial';x.fillStyle='#344b80';x.fillText(($('time').value||'—')+'  •  WEEK '+($('week').value||'—'),105,371);
+ x.fillStyle=$('status').value.toLowerCase().includes('approved')?'#16805d':'#a16207';x.beginPath();x.roundRect(80,420,920,65,14);x.fill();textFit($('status').value,105,461,860,'bold 29px Arial','#fff');
+ const entries=[['Petsa ng EF',fmt($('approved').value)],['Lokal',$('local').value||'—'],['Ebanghelista',$('evangelist').value||'—'],['Pangalan ng itinala',$('name').value||'—'],['Kalagayan Sibil',$('civil').value],['Uri',$('type').value]];
+ let y=535;entries.forEach((e,i)=>{if(i){x.strokeStyle='#e5eaf4';x.lineWidth=2;x.beginPath();x.moveTo(105,y-28);x.lineTo(975,y-28);x.stroke()}x.fillStyle='#6b7893';x.font='23px Arial';x.fillText(e[0].toUpperCase(),105,y);textFit(e[1],105,y+39,835,'bold 31px Arial','#202d49');y+=(i===3?96:75)});
+ x.fillStyle='#244bc5';x.fillRect(50,1000,980,30);x.fillStyle='#fff';x.font='bold 17px Arial';x.fillText('EF INFORMATION CARD',75,1021);
+ $('message').textContent='Na-update ang preview. Maaari mo nang i-save ang PNG.';
+}
+ids.forEach(id=>$(id).addEventListener('input',draw));
+$('generate').addEventListener('click',draw);
+$('save').addEventListener('click',()=>{draw();c.toBlob(blob=>{if(!blob){$('message').textContent='Hindi nagawa ang PNG. Subukang muli.';return}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='EF-Card-'+($('date').value||'record')+'.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);$('message').textContent='Sinimulan ang pag-save. Tingnan ang Downloads ng browser.'},'image/png')});
+const today=localISO(new Date());$('date').value=today;$('approved').value=today;draw();
+</script>
+</body>
+</html>
